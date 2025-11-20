@@ -5,12 +5,12 @@ name: |
 on:
   repository_dispatch:
     types: [dispatch-event]
+  workflow_dispatch:
 
 jobs:
   update-index:
     runs-on: ubuntu-latest
     steps:
-
       - name: Checkout index repo
         uses: actions/checkout@v4
         with:
