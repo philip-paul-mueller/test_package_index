@@ -54,6 +54,13 @@ jobs:
           # Do something smarter here, pass in the values.
           python generate.py
 
+          ls -1R .
+
+          git status
+          exit 0
+
+
+
           # Create a new branch
           #
 
