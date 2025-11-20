@@ -48,6 +48,7 @@ jobs:
           CI_COMMIT_AUTHOR: github-actions[bot]
           CI_COMMIT_EMAIL: username@users.noreply.github.com
         run: |
+          ls .
           cd ./index_repo
           if ! git status --porcelain --untracked-files=no ; then
             # There are no changed.
@@ -55,6 +56,7 @@ jobs:
             exit 0
           fi
           echo "CI_COMMIT_MESSAGE: ${CI_COMMIT_MESSAGE}"
+          ls .
           git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
           git config --global user.email "${{ env.CI_COMMIT_EMAIL }}"
 
