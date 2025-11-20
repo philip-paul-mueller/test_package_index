@@ -25,6 +25,7 @@ jobs:
           #path: ${{ github.event.client_payload.source_repo }}
           path: dace
           # Everything we pull is publich, so no token needed.
+          submodules: 'recursive'
 
       - name: Build the distribution.
         shell: bash
