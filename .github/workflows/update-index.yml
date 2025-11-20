@@ -1,0 +1,72 @@
+name: |
+  Updates the package index upon an event. Which repo should be updated depends on the
+  `"source_repo"` payload of the request.
+
+on:
+  repository_dispatch:
+    types: [dispatch-event]
+
+jobs:
+  update-index:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout index repo
+        uses: actions/checkout@v4
+        with:
+          path: index_repo
+          # Maybe we need a token such that we can push later to us.
+
+      - name: Checkout the dependency repo that should be updated.
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.client_payload.source_org }}/${{ github.event.client_payload.source_repo }}
+          path: ${{ github.event.client_payload.source_repo }}
+          # Everything we pull is publich, so no token needed.
+
+      - name: Build the distribution.
+        shell: bash
+        env:
+          DEPENDENCY_REPO: ./${{ github.event.client_payload.source_repo }}
+          DIST_FOLDER: ./index_repo/${{ github.event.client_payload.source_repo }}
+        run: |
+          python -m pip install build --user
+          cd "${DEPENDENCY_REPO}"
+          python -m build --wheel --outdir "${DIST_FOLDER}"
+
+      - name: Create a PR in the index repo
+        shell: bash
+        env:
+          CI_COMMIT_MESSAGE: updated dependency '${{ github.event.client_payload.source_org }}/${{ github.event.client_payload.source_repo }}'
+          CI_COMMIT_AUTHOR: github-actions[bot]
+          CI_COMMIT_EMAIL: username@users.noreply.github.com
+        run: |
+          cd ./index_repo
+          if ! git status --porcelain --untracked-files=no ; then
+            # There are no changed.
+            echo "There were no changes!"
+            exit 0
+          fi
+          echo "CI_COMMIT_MESSAGE: ${CI_COMMIT_MESSAGE}"
+          git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
+          git config --global user.email "${{ env.CI_COMMIT_EMAIL }}"
+
+          # Do something smarter here, pass in the values.
+          python generate.py
+
+          # Create a new branch
+          #
+
+          git add .
+          git commit --no-verify -m "${CI_COMMIT_MESSAGE}"
+          git push origin 
+
+
+
+
+
+
+
+
+
+
