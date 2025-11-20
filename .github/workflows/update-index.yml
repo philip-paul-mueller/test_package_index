@@ -26,6 +26,8 @@ jobs:
           path: dace
           # Everything we pull is publich, so no token needed.
           submodules: 'recursive'
+          # Must be changed to something dinamically.
+          ref: "gt4py-next-integration"
 
       - name: Build the distribution.
         shell: bash
