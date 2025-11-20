@@ -9,11 +9,11 @@ HTML_HEADER: Final[str] = """\
 <html>
     <head>
         <title>{Title}</title>
-            <meta charset="UTF-8" />
+        <meta charset="UTF-8" />
     </head>
 
     <body>
-        <h1>{Title}</h1>
+    <h1>{Title}</h1>
 """
 """The header for a html page.
 
@@ -57,14 +57,14 @@ def write_project_index(
         assert filename.startswith(normalized_project_name + "-")
 
         # Compute the hash such that we can append it to the link.
-        with open(file_to_publish, "rb") as F:
+        with open(file, "rb") as F:
             digest = hashlib.file_digest(F, "sha256")
 
         # PEP503 says that the text of the anchor element must be the filename, so there
         #  is not need for fancy processing of the file name. Furthermore, we assume that
         #  the file names have the correct normalized name and version.
         anchor_elements.append(
-                f'\t<a href="{file_name_to_publish}#sha256={digest.hexdigest()}">{file_name_to_publish}</a> </br>'
+                f'\t\t<a href="{filename}#sha256={digest.hexdigest()}">{filename}</a> </br>\n'.replace("\t", "    ")
         )
 
     # Now write the index file.
@@ -84,16 +84,17 @@ def write_package_index(
         index.write(HTML_HEADER.format(Title=f"Custom Package Index for GT4Py"))
 
         for project_name in packages:
-            project_folder = base_folder / "project_name"
+            project_folder = base_folder / project_name
             if not project_folder.is_dir():
                 raise NotADirectoryError(
                         f"There is not folder corresponding to project `{project_name}`."
                 )
             normalized_project_name = normalize_name(project_name)
-            index.write(f'\t\t<a href="{project_name}">{normalized_project_name}</a>\n')
+            index.write(f'\t\t<a href="{project_name}">{normalized_project_name}</a>\n'.replace("\t", "    "))
             write_project_index(base_folder, project_name)
 
-        index.writelines(anchor_elements)
+        index.write(HTML_FOOTER)
+
 
 
 if __name__ == "__main__":
