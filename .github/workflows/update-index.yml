@@ -20,15 +20,19 @@ jobs:
       - name: Checkout the dependency repo that should be updated.
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.event.client_payload.source_org }}/${{ github.event.client_payload.source_repo }}
-          path: ${{ github.event.client_payload.source_repo }}
+          #repository: ${{ github.event.client_payload.source_org }}/${{ github.event.client_payload.source_repo }}
+          repository: gridtools/dace
+          #path: ${{ github.event.client_payload.source_repo }}
+          path: dace
           # Everything we pull is publich, so no token needed.
 
       - name: Build the distribution.
         shell: bash
         env:
-          DEPENDENCY_REPO: ./${{ github.event.client_payload.source_repo }}
-          DIST_FOLDER: ./index_repo/${{ github.event.client_payload.source_repo }}
+          #DEPENDENCY_REPO: ./${{ github.event.client_payload.source_repo }}
+          DEPENDENCY_REPO: ./dace
+          #DIST_FOLDER: ./index_repo/${{ github.event.client_payload.source_repo }}
+          DIST_FOLDER: ./index_repo/dace
         run: |
           python -m pip install build --user
           cd "${DEPENDENCY_REPO}"
@@ -53,6 +57,8 @@ jobs:
 
           # Do something smarter here, pass in the values.
           python generate.py
+
+          touch "$(date +%s)"
 
           ls -1R .
 
