@@ -31,12 +31,12 @@ jobs:
 
       - name: Build the distribution.
         shell: bash
-        env:
-          #DEPENDENCY_REPO: ./${{ github.event.client_payload.source_repo }}
-          DEPENDENCY_REPO: ./dace
-          #DIST_FOLDER: ./index_repo/${{ github.event.client_payload.source_repo }}
-          DIST_FOLDER: ./index_repo/dace
         run: |
+          #DEPENDENCY_REPO="${PWD}/${{ github.event.client_payload.source_repo }}"
+          DEPENDENCY_REPO="${PWD}/dace"
+          #DIST_FOLDER="${PWD}/index_repo/${{ github.event.client_payload.source_repo }}"
+          DIST_FOLDER="${PWD}/index_repo/dace"
+
           python -m pip install build --user
           echo "${DEPENDENCY_REPO} | ${DIST_FOLDER}"
           cd "${DEPENDENCY_REPO}"
