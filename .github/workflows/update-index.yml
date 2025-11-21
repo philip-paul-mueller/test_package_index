@@ -64,13 +64,13 @@ jobs:
           for I in ${!PACKAGE_FILES[@]}
           do
             PACKAGE_FILE="${PACKAGE_FILES[$I]}"
-            echo pip install --force-reinstall --upgrade --no-deps "${PACKAGE_FILE}"
             pip install --force-reinstall --upgrade --no-deps "${PACKAGE_FILE}"
             if [ $? -ne 0 ]
             then
               echo "Failed to install package '${PACKAGE_FILE}'"
               exit 3
             fi
+            echo "Successfully tested '${PACKAGE_FILE}'"
             cp -t "${DESTINATION_FOLDER}" "${PACKAGE_FILE}"
           done
 
