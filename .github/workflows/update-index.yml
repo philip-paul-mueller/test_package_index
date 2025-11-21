@@ -27,9 +27,9 @@ jobs:
       - name: Print all variables
         shell: bash
         run: |
-          echo "source_repo: ${{ inputs.source_repo }}"
-          echo "source_org: ${{ inputs.source_org }}"
-          echo "dep_ref: ${{ inputs.dependency_ref }}"
+          echo "source_repo: ${{ inputs.source_repo == '' && github.event.client_payload.source_repo || inputs.source_repo }}"
+          echo "source_org:  ${{ inputs.source_org == '' && github.event.client_payload.source_org || inputs.source_org }}"
+          echo "dep_ref:     ${{ inputs.dependency_ref == '' && github.event.client_payload.dependency_ref || inputs.dependency_ref }}"
 
       - name: Checkout `master` branch of the index repo.
         uses: actions/checkout@v4
@@ -41,16 +41,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           # Everything we pull is publich, so no token needed.
-          repository: ${{ inputs.source_org }}/${{ inputs.source_repo }}
-          path: ${{ inputs.source_repo }}
+          repository: ${{ inputs.source_org == '' && github.event.client_payload.source_org || inputs.source_org }}/${{ inputs.source_repo == '' && github.event.client_payload.source_repo || inputs.source_repo }}
+          path: ${{ inputs.source_repo == '' && github.event.client_payload.source_repo || inputs.source_repo }}
           submodules: 'recursive'
-          ref: ${{ inputs.dependency_ref }}
+          ref: ${{ inputs.dependency_ref == '' && github.event.client_payload.dependency_ref || inputs.dependency_ref }}
 
       - name: Build the distribution.
         shell: bash
         run: |
-          DEPENDENCY_REPO="${PWD}/${{ inputs.source_repo }}"
-          DIST_FOLDER="${PWD}/index_repo/${{ inputs.source_repo }}"
+          DEPENDENCY_REPO="${PWD}/${{ inputs.source_repo == '' && github.event.client_payload.source_repo || inputs.source_repo }}"
+          DIST_FOLDER="${PWD}/index_repo/${{ inputs.source_repo == '' && github.event.client_payload.source_repo || inputs.source_repo }}"
 
           cd "${DEPENDENCY_REPO}"
           python -m pip install build --user
@@ -59,7 +59,7 @@ jobs:
       - name: Create a PR in the index repo
         shell: bash
         env:
-          CI_COMMIT_MESSAGE: updated dependency '${{ inputs.source_org }}/${{ inputs.source_repo }}'
+          CI_COMMIT_MESSAGE: updated dependency "${{ inputs.source_org == '' && github.event.client_payload.source_org || inputs.source_org }}/${{ inputs.source_repo == '' && github.event.client_payload.source_repo || inputs.source_repo }}"
           CI_COMMIT_AUTHOR: github-actions[bot]
           CI_COMMIT_EMAIL: username@users.noreply.github.com
         run: |
