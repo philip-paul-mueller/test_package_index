@@ -6,6 +6,19 @@ on:
   repository_dispatch:
     types: [dispatch-event]
   workflow_dispatch:
+    inputs:
+      source_repo:
+        description: 'Name of the repo that contains the dependency.'
+        required: true
+        type: string
+      source_org:
+        description: 'Name of the organization/user that owns the dependency repo.'
+        required: true
+        type: string
+      dependency_ref:
+        description: 'Reference that in the dependency repo that should be checked out and turned into a dependency.'
+        required: true
+        type: string
 
 jobs:
   update-index:
@@ -20,22 +33,17 @@ jobs:
       - name: Checkout the dependency that should be updated in the index.
         uses: actions/checkout@v4
         with:
-          #repository: ${{ github.event.client_payload.source_org }}/${{ github.event.client_payload.source_repo }}
-          repository: gridtools/dace
-          #path: ${{ github.event.client_payload.source_repo }}
-          path: dace
           # Everything we pull is publich, so no token needed.
+          repository: ${{ github.inputs.source_org }}/${{ github.inputs.source_repo }}
+          path: ${{ github.inputs.source_repo }}
           submodules: 'recursive'
-          # Must be changed to something dynamically.
-          ref: "gt4py-next-integration"
+          ref: ${{ github.inputs.dependency_ref }}
 
       - name: Build the distribution.
         shell: bash
         run: |
-          #DEPENDENCY_REPO="${PWD}/${{ github.event.client_payload.source_repo }}"
-          #DIST_FOLDER="${PWD}/index_repo/${{ github.event.client_payload.source_repo }}"
-          DEPENDENCY_REPO="${PWD}/dace"
-          DIST_FOLDER="${PWD}/index_repo/dace"
+          DEPENDENCY_REPO="${PWD}/${{ github.inputs.source_repo }}"
+          DIST_FOLDER="${PWD}/index_repo/${{ github.inputs.source_repo }}"
 
           cd "${DEPENDENCY_REPO}"
           python -m pip install build --user
@@ -44,7 +52,7 @@ jobs:
       - name: Create a PR in the index repo
         shell: bash
         env:
-          CI_COMMIT_MESSAGE: updated dependency '${{ github.event.client_payload.source_org }}/${{ github.event.client_payload.source_repo }}'
+          CI_COMMIT_MESSAGE: updated dependency '${{ github.inputs.source_org }}/${{ github.inputs.source_repo }}'
           CI_COMMIT_AUTHOR: github-actions[bot]
           CI_COMMIT_EMAIL: username@users.noreply.github.com
         run: |
