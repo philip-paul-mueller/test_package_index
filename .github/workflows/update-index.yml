@@ -56,16 +56,26 @@ jobs:
             exit 0
           fi
           echo "CI_COMMIT_MESSAGE: ${CI_COMMIT_MESSAGE}"
+          echo "INSIDE INDEX REPO"
+          echo "================================="
           ls .
           git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
           git config --global user.email "${{ env.CI_COMMIT_EMAIL }}"
+          echo "================================="
+          echo 
 
           # Do something smarter here, pass in the values.
-          python generate.py
+          python generator.py
+
+          echo "================================="
+          echo "AFTER GENERATOR"
 
           touch "$(date +%s)"
 
           ls -1R .
+
+          echo ""
+          echo "================================="
 
           git status
           exit 0
