@@ -1,6 +1,4 @@
-name: |
-  Updates the package index upon an event. Which repo should be updated depends on the
-  `"source_repo"` payload of the request.
+name: Updates the Python package index upon an event. 
 
 on:
   repository_dispatch:
@@ -31,32 +29,46 @@ jobs:
           echo "source_org:  ${{ inputs.source_org == '' && github.event.client_payload.source_org || inputs.source_org }}"
           echo "dep_ref:     ${{ inputs.dependency_ref == '' && github.event.client_payload.dependency_ref || inputs.dependency_ref }}"
 
-      - name: Checkout `master` branch of the index repo.
+      - name: Checkout the `master` branch of the Python package index.
         uses: actions/checkout@v4
         with:
           path: index_repo
           ref: master    # We always work on master!
 
-      - name: Checkout the dependency that should be updated in the index.
+      - name: Checkout the repo of the dependency that should be added to the index.
         uses: actions/checkout@v4
         with:
-          # Everything we pull is publich, so no token needed.
           repository: ${{ inputs.source_org == '' && github.event.client_payload.source_org || inputs.source_org }}/${{ inputs.source_repo == '' && github.event.client_payload.source_repo || inputs.source_repo }}
           path: ${{ inputs.source_repo == '' && github.event.client_payload.source_repo || inputs.source_repo }}
           submodules: 'recursive'
           ref: ${{ inputs.dependency_ref == '' && github.event.client_payload.dependency_ref || inputs.dependency_ref }}
 
-      - name: Build the distribution.
+      - name: Build the distribution file.
         shell: bash
         run: |
           DEPENDENCY_REPO="${PWD}/${{ inputs.source_repo == '' && github.event.client_payload.source_repo || inputs.source_repo }}"
-          DIST_FOLDER="${PWD}/index_repo/${{ inputs.source_repo == '' && github.event.client_payload.source_repo || inputs.source_repo }}"
+          PACKAGE_BUILD_FOLDER=${PWD}/index_repo/build"
+          DESTINATION_FOLDER="${PWD}/index_repo/${{ inputs.source_repo == '' && github.event.client_payload.source_repo || inputs.source_repo }}"
 
           cd "${DEPENDENCY_REPO}"
           python -m pip install build --user
-          python -m build --wheel --outdir "${DIST_FOLDER}"
+          python -m build --wheel --outdir "${PACKAGE_BUILD_FOLDER}"
 
-      - name: Create a PR in the index repo
+          mkdir -p "${DESTINATION_FOLDER}"
+
+          readarray -t -d "" PACKAGE_FILES  < <(find "${PACKAGE_BUILD_FOLDER}" -type f -print0)
+          for I in ${!PACKAGE_FILES[@]}
+          do
+            PACKAGE_FILE="${PACKAGE_FILES[$I]}"
+            if ! pip install --force-reinstall --upgrade --no-deps "${PACKAGE_FILE}"
+            then
+              echo "Failed to install package '${PACKAGE_FILE}'"
+              exit 3
+            fi
+            cp -t "${DESTINATION_FOLDER}" "${PACKAGE_FILE}"
+          done
+
+      - name: Rescan the package index and update the static `index.html` files.
         shell: bash
         env:
           CI_COMMIT_MESSAGE: updated dependency "${{ inputs.source_org == '' && github.event.client_payload.source_org || inputs.source_org }}/${{ inputs.source_repo == '' && github.event.client_payload.source_repo || inputs.source_repo }}"
@@ -64,6 +76,10 @@ jobs:
           CI_COMMIT_EMAIL: username@users.noreply.github.com
         run: |
           cd ./index_repo
+
+          # Not fully sure if this check is useful, because it seems that creating a wheel is not reproducible.
+          #  I.e. creating a wheel from a commit and then generating another wheel will result in a "different",
+          #  in terms of its hash, file than the first time.
           if ! git status --porcelain --untracked-files=no ; then
             # There are no changed.
             echo "There were no changes!"
@@ -73,7 +89,7 @@ jobs:
           # Update all the packages.
           python generator.py
 
-          # We directly push to master.
+          # We directly push to master!
           git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
           git config --global user.email "${{ env.CI_COMMIT_EMAIL }}"
           git add .
