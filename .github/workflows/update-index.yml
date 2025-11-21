@@ -56,10 +56,12 @@ jobs:
             exit 0
           fi
 
-          # Run the update process.
+          # Update all the packages.
           python generator.py
 
           # We directly push to master.
+          git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
+          git config --global user.email "${{ env.CI_COMMIT_EMAIL }}"
           git add .
           git commit --no-verify -m "${CI_COMMIT_MESSAGE}"
           git push origin master
