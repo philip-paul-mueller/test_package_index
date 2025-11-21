@@ -48,12 +48,16 @@ jobs:
         run: |
           DEPENDENCY_REPO="${PWD}/${{ inputs.source_repo == '' && github.event.client_payload.source_repo || inputs.source_repo }}"
           PACKAGE_BUILD_FOLDER=${PWD}/index_repo/build"
-          DESTINATION_FOLDER="${PWD}/index_repo/${{ inputs.source_repo == '' && github.event.client_payload.source_repo || inputs.source_repo }}"
 
           cd "${DEPENDENCY_REPO}"
           python -m pip install build --user
           python -m build --wheel --outdir "${PACKAGE_BUILD_FOLDER}"
 
+      - name: Test the distribution file.
+        shell: bash
+        run: |
+          PACKAGE_BUILD_FOLDER=${PWD}/index_repo/build"
+          DESTINATION_FOLDER="${PWD}/index_repo/${{ inputs.source_repo == '' && github.event.client_payload.source_repo || inputs.source_repo }}"
           mkdir -p "${DESTINATION_FOLDER}"
 
           readarray -t -d "" PACKAGE_FILES  < <(find "${PACKAGE_BUILD_FOLDER}" -type f -print0)
