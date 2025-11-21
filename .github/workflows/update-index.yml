@@ -24,6 +24,13 @@ jobs:
   update-index:
     runs-on: ubuntu-latest
     steps:
+      - name: Print all variables
+        shell: bash
+        run: |
+          echo "source_repo: ${{ github.inputs.source_repo }}"
+          echo "source_org: ${{ github.inputs.source_org }}"
+          echo "dep_ref: ${{ github.inputs.dependency_ref }}"
+
       - name: Checkout `master` branch of the index repo.
         uses: actions/checkout@v4
         with:
