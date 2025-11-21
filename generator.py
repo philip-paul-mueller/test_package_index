@@ -1,8 +1,11 @@
+"""Regenerates the index based on the specified folders.
+"""
 from typing import Final, Sequence
 
+import hashlib
 import pathlib
 import re
-import hashlib
+import sys
 
 HTML_HEADER: Final[str] = """\
 <!DOCTYPE HTML>
@@ -37,8 +40,7 @@ def normalize_name(name: str) -> bool:
 def write_project_index(
         base_folder: pathlib.Path,
         project_name: str,
-) -> None:
-
+) -> int:
     # Project folder must exists because we assume that the files are located inside.
     project_folder = base_folder / project_name
     if not project_folder.is_dir():
@@ -46,6 +48,7 @@ def write_project_index(
                 f"Expected that the project folder `{project_folder}` for project `{project_name}` exists."
     )
 
+    found_packages = 0
     normalized_project_name = normalize_name(project_name)
     with open(project_folder / "index.html", "wt") as index:
         index.write(HTML_HEADER.format(Title=f"Custom Package for '{project_name}'"))
@@ -68,8 +71,10 @@ def write_project_index(
             index.write(
                     f'\t\t<a href="{filename}#sha256={digest.hexdigest()}">{filename}</a> </br>\n'.replace("\t", "    ")
             )
-
+            found_packages += 1
         index.write(HTML_FOOTER)
+
+        return found_packages
 
 
 def write_package_index(
@@ -82,13 +87,29 @@ def write_package_index(
 
         for project_name in packages:
             project_folder = base_folder / project_name
-            if not project_folder.is_dir():
-                raise NotADirectoryError(
-                        f"There is not folder corresponding to project `{project_name}`."
-                )
             normalized_project_name = normalize_name(project_name)
+            if not project_folder.is_dir():
+                print(
+                        f"There is not folder associated to the project `{project_name}`, skipping it.",
+                        flush=True,
+                        file=sys.stderr,
+                )
+                continue
+
+            # Now generate the index for that file.
+            found_packages = write_project_index(base_folder, project_name)
+
+            if found_packages == 0:
+                # Consider no packages not as an error, only output a warning.
+                # TODO: Consider removing the folder.
+                print(
+                        f"No packages for project `{project_name}` could be located.",
+                        flush=True,
+                        file=sys.stderr,
+                )
+                continue
+
             index.write(f'\t\t<a href="{project_name}">{normalized_project_name}</a>\n'.replace("\t", "    "))
-            write_project_index(base_folder, project_name)
 
         index.write(HTML_FOOTER)
 
@@ -96,8 +117,5 @@ def write_package_index(
 if __name__ == "__main__":
     write_package_index(
             base_folder=pathlib.Path(__file__).parent,
-            packages=["dace"],
+            packages=["dace", "ghex"],
     )
-
-
-
