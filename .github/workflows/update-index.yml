@@ -43,14 +43,14 @@ jobs:
 
           echo "========================"
           echo "DIST_FOLDER before:"
-          ls "${DIST_FOLDER}
+          ls "${DIST_FOLDER}"
           echo ""
           python -m build --wheel --outdir "${DIST_FOLDER}"
 
           echo ""
           echo "========================"
           echo "DIST_FOLDER After:"
-          ls "${DIST_FOLDER}
+          ls "${DIST_FOLDER}"
           echo ""
 
       - name: Create a PR in the index repo
