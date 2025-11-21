@@ -59,9 +59,6 @@ jobs:
           # Run the update process.
           python generator.py
 
-          git status
-          exit 0
-
           # We directly push to master.
           git add .
           git commit --no-verify -m "${CI_COMMIT_MESSAGE}"
