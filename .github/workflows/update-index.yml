@@ -64,7 +64,9 @@ jobs:
           for I in ${!PACKAGE_FILES[@]}
           do
             PACKAGE_FILE="${PACKAGE_FILES[$I]}"
-            if ! pip install --force-reinstall --upgrade --no-deps "${PACKAGE_FILE}"
+            echo pip install --force-reinstall --upgrade --no-deps "${PACKAGE_FILE}"
+            pip install --force-reinstall --upgrade --no-deps "${PACKAGE_FILE}"
+            if [ $? -ne 0 ]
             then
               echo "Failed to install package '${PACKAGE_FILE}'"
               exit 3
