@@ -5,6 +5,20 @@ name: |
 on:
   repository_dispatch:
     types: [update_package_index]
+  workflow_dispatch:
+    inputs:
+      source_repo:
+        description: 'Name of the repo that contains the dependency.'
+        required: true
+        type: string
+      source_org:
+        description: 'Name of the organization/user that owns the dependency repo.'
+        required: true
+        type: string
+      dependency_ref:
+        description: 'Reference that in the dependency repo that should be checked out and turned into a dependency.'
+        required: true
+        type: string
 
 jobs:
   update-index:
